@@ -26,6 +26,7 @@ typedef struct WAVHEADER
 int8_t ReadHeader(FILE *input_fp, WAVHEADER *header);
 int8_t PrintHeader(WAVHEADER *header);
 int8_t CheckFormat(WAVHEADER header);
+int8_t WriteHeader(FILE *output_fp, WAVHEADER *header);
 int8_t GetBlockSize(WAVHEADER header);
 
 int32_t main(int argc, char *argv[])
@@ -62,7 +63,15 @@ int32_t main(int argc, char *argv[])
     return EXIT_FAILURE;
   }
 
+  FILE *output_fp = fopen(output, "wb");
 
+  if (output_fp == NULL)
+  {
+    printf("Can't create and open %s\n", output);
+    return EXIT_FAILURE;
+  }
+  
+  WriteHeader(output_fp, &header);
 
 
   fclose(input_fp);
@@ -123,6 +132,25 @@ int8_t CheckFormat(WAVHEADER header)
   }
 
   return EXIT_FAILURE;
+}
+
+int8_t WriteHeader(FILE *output_fp, WAVHEADER *header)
+{
+  fwrite(&(header->riff), sizeof(header->riff), 1, output_fp);
+  fwrite(&(header->file_size), sizeof(header->file_size), 1, output_fp);
+  fwrite(&(header->file_type[0]), sizeof(header->file_type[0]), 4, output_fp);
+  fwrite(&(header->format_marker[0]), sizeof(header->format_marker[0]), 4, output_fp);
+  fwrite(&(header->format_data_len), sizeof(header->format_data_len), 1, output_fp);
+  fwrite(&(header->format_type), sizeof(header->format_type), 1, output_fp);
+  fwrite(&(header->channels), sizeof(header->channels), 1, output_fp);
+  fwrite(&(header->sample_rate), sizeof(header->sample_rate), 1, output_fp);
+  fwrite(&(header->byte_rate), sizeof(header->byte_rate), 1, output_fp);
+  fwrite(&(header->block_align), sizeof(header->block_align), 1, output_fp);
+  fwrite(&(header->bits_per_sample), sizeof(header->bits_per_sample), 1, output_fp);
+  fwrite(&(header->data_chunk_header[0]), sizeof(header->data_chunk_header[0]), 4, output_fp);
+  fwrite(&(header->data_size), sizeof(header->data_size), 1, output_fp);
+
+  return EXIT_SUCCESS;
 }
 
 int8_t GetBlockSize(WAVHEADER header)
