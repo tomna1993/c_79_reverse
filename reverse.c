@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define MAX_CHARS 50
+
 typedef struct WAVHEADER
 {
   int32_t riff;
@@ -19,18 +21,33 @@ typedef struct WAVHEADER
   char data_chunk_header[4];
 } WAVHEADER; 
 
-int main(int argc, char *argv[])
+int8_t main(int argc, char *argv[])
 {
+  if(argc != 3)
+  {
+    printf("Usage: <program> <input.wav> <output.wav>\n");
+    return EXIT_FAILURE;
+  }
+
+  char input[MAX_CHARS] = { '\0' };
+  char output[MAX_CHARS] = { '\0' };
+
+  strcpy_s(input, MAX_CHARS, argv[1]);
+  strcpy_s(output, MAX_CHARS, argv[2]);
+  
   WAVHEADER header = { 0 };
   
+
+
+  return EXIT_SUCCESS;
 }
 
-int check_format(WAVHEADER header)
+int8_t check_format(WAVHEADER header)
 {
   return EXIT_SUCCESS;
 }
 
-int get_block_size(WAVHEADER header)
+int8_t get_block_size(WAVHEADER header)
 {
   return EXIT_SUCCESS;
 }
