@@ -19,6 +19,7 @@ typedef struct WAVHEADER
   int16_t block_align;
   int16_t bits_per_sample;
   char data_chunk_header[5];
+  int32_t data_size;
   int32_t data_start_addr;
 } WAVHEADER; 
 
@@ -55,6 +56,14 @@ int32_t main(int argc, char *argv[])
   ReadHeader(input_fp, &header);
   PrintHeader(&header);
 
+  if(CheckFormat(header) == EXIT_FAILURE)
+  {
+    printf ("Wrong file type!\n");
+    return EXIT_FAILURE;
+  }
+
+
+
 
   fclose(input_fp);
   input_fp = NULL;
@@ -76,6 +85,7 @@ int8_t ReadHeader(FILE *input_fp, WAVHEADER *header)
   fread(&(header->block_align), sizeof(header->block_align), 1, input_fp);
   fread(&(header->bits_per_sample), sizeof(header->bits_per_sample), 1, input_fp);
   fread(&(header->data_chunk_header[0]), sizeof(header->data_chunk_header[0]), 4, input_fp);
+  fread(&(header->data_size), sizeof(header->data_size), 1, input_fp);
   header->data_start_addr = ftell(input_fp);
 
   header->file_type[4] = '\0';
@@ -99,13 +109,20 @@ int8_t PrintHeader(WAVHEADER *header)
   printf("Block Align: %i\n", header->block_align);
   printf("Bits Per Sample: %i\n", header->bits_per_sample);
   printf("Data header: %s\n", header->data_chunk_header);
+  printf("Data Size: %i\n", header->data_size);
+  printf("Data Start Address: %i\n", header->data_start_addr);
 
   return EXIT_SUCCESS;
 }
 
 int8_t CheckFormat(WAVHEADER header)
 {
-  return EXIT_SUCCESS;
+  if(strncmp(header.file_type, "WAVE", 5) == 0)
+  {
+    return EXIT_SUCCESS;
+  }
+
+  return EXIT_FAILURE;
 }
 
 int8_t GetBlockSize(WAVHEADER header)
