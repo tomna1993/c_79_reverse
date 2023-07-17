@@ -28,10 +28,4 @@ Unlike MP3 audio files, WAV files are not compressed. This makes the files much 
 
 - Now that the file type has been verified, write the header to the output file. The reversed WAV file will still have the same underlying file structure as the input file (same size, number of channels, bits per sample, etc.), so it suffices to copy the header we read in from the input file to the output file.
 
-- Implement the `get_block_size` function. `get_block_size`, like `check_format`, takes a single argument: this is a `WAVHEADER` called `header`, representing the struct containing the input file’s header. `get_block_size` should return an integer representing the block size of the given WAV file, in bytes. We can think of a block as a unit of auditory data. For audio, we calculate the size of each block with the following calculation:
-
-  ```number of channels multiplied by bytes per sample```.
-
-  Luckily, the header contains all the information we need to compute these values.
-
 - And now the actual audio reversing takes place. To do this, we need to read in each block of auditory data starting from the very end of the input file and moving backwards, simultaneously writing each block to the output file so they are written in reverse order. We’ll want to be sure we read through all of the audio, but don’t erroneously copy any of the data from the header! Additionally, for testing purposes, we would like to maintain the order of the channels for each audio block. For example, in a WAV file with two channels (stereophonic sound), we want to make sure that the first channel of the last audio block in the input becomes the first channel of the first audio block in the output.
