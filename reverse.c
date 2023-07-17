@@ -24,10 +24,11 @@ typedef struct WAVHEADER
 } WAVHEADER; 
 
 int8_t ReadHeader(FILE *input_fp, WAVHEADER *header);
-int8_t PrintHeader(WAVHEADER *header);
+int8_t PrintHeader(WAVHEADER header);
 int8_t CheckFormat(WAVHEADER header);
+int8_t ReadAudioData(FILE *input_fp, WAVHEADER header, int32_t *audio_data);
 int8_t WriteHeader(FILE *output_fp, WAVHEADER *header);
-int8_t GetBlockSize(WAVHEADER header);
+int8_t WriteAudioData(FILE *output_fp, WAVHEADER header, int32_t *audio_data);
 
 int32_t main(int argc, char *argv[])
 {
@@ -52,16 +53,22 @@ int32_t main(int argc, char *argv[])
   }
 
   WAVHEADER header = { 0 };
-  int16_t *audio_data = (int16_t *)malloc(sizeof(audio_data) * 10);
 
   ReadHeader(input_fp, &header);
-  PrintHeader(&header);
+  PrintHeader(header);
 
   if(CheckFormat(header) == EXIT_FAILURE)
   {
     printf ("Wrong file type!\n");
     return EXIT_FAILURE;
   }
+
+  int32_t *audio_data = (int32_t *)malloc(header.data_size);
+
+  ReadAudioData(input_fp, header, audio_data);
+
+  fclose(input_fp);
+  input_fp = NULL;
 
   FILE *output_fp = fopen(output, "wb");
 
@@ -72,10 +79,13 @@ int32_t main(int argc, char *argv[])
   }
   
   WriteHeader(output_fp, &header);
+  WriteAudioData(output_fp, header, audio_data);
 
+  fclose(output_fp);
+  output_fp = NULL;
 
-  fclose(input_fp);
-  input_fp = NULL;
+  free(audio_data);
+  audio_data = NULL;
 
   return EXIT_SUCCESS;
 }
@@ -104,22 +114,22 @@ int8_t ReadHeader(FILE *input_fp, WAVHEADER *header)
   return EXIT_SUCCESS;
 }
 
-int8_t PrintHeader(WAVHEADER *header)
+int8_t PrintHeader(WAVHEADER header)
 {
-  printf("RIFF: %i\n", header->riff);
-  printf("File Size: %i\n", header->file_size);
-  printf("File Type: %s\n", header->file_type);
-  printf("Format Marker: %s\n", header->format_marker);
-  printf("Format Data Length: %i\n", header->format_data_len);
-  printf("Format Type: %i\n", header->format_type);
-  printf("Channels: %i\n", header->channels);
-  printf("Sample Rate: %i\n", header->sample_rate);
-  printf("Byte Rate: %i\n", header->byte_rate);
-  printf("Block Align: %i\n", header->block_align);
-  printf("Bits Per Sample: %i\n", header->bits_per_sample);
-  printf("Data header: %s\n", header->data_chunk_header);
-  printf("Data Size: %i\n", header->data_size);
-  printf("Data Start Address: %i\n", header->data_start_addr);
+  printf("RIFF: %i\n", header.riff);
+  printf("File Size: %i\n", header.file_size);
+  printf("File Type: %s\n", header.file_type);
+  printf("Format Marker: %s\n", header.format_marker);
+  printf("Format Data Length: %i\n", header.format_data_len);
+  printf("Format Type: %i\n", header.format_type);
+  printf("Channels: %i\n", header.channels);
+  printf("Sample Rate: %i\n", header.sample_rate);
+  printf("Byte Rate: %i\n", header.byte_rate);
+  printf("Block Align: %i\n", header.block_align);
+  printf("Bits Per Sample: %i\n", header.bits_per_sample);
+  printf("Data header: %s\n", header.data_chunk_header);
+  printf("Data Size: %i\n", header.data_size);
+  printf("Data Start Address: %i\n", header.data_start_addr);
 
   return EXIT_SUCCESS;
 }
@@ -132,6 +142,16 @@ int8_t CheckFormat(WAVHEADER header)
   }
 
   return EXIT_FAILURE;
+}
+
+int8_t ReadAudioData(FILE *input_fp, WAVHEADER header, int32_t *audio_data)
+{
+  for(int32_t i = 0, end = header.data_size / sizeof(*audio_data); i < end; ++i)
+  {
+    fread(audio_data + i, sizeof(*audio_data), 1, input_fp);
+  }
+
+  return EXIT_SUCCESS;
 }
 
 int8_t WriteHeader(FILE *output_fp, WAVHEADER *header)
@@ -153,7 +173,12 @@ int8_t WriteHeader(FILE *output_fp, WAVHEADER *header)
   return EXIT_SUCCESS;
 }
 
-int8_t GetBlockSize(WAVHEADER header)
+int8_t WriteAudioData(FILE *output_fp, WAVHEADER header, int32_t *audio_data)
 {
+  for(int32_t i = (header.data_size / sizeof(*audio_data)) - 1; i >= 0; --i)
+  {
+    fwrite(audio_data + i, sizeof(*audio_data), 1, output_fp);
+  }
+
   return EXIT_SUCCESS;
 }
